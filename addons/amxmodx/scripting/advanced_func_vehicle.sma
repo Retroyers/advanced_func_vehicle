@@ -88,7 +88,7 @@ public round_start() {
 			entity_get_vector(vehicleIds[index], EV_VEC_origin, vVehicleOrigin);
 			server_print("func vehicle origin 1 %f", vVehicleOrigin[2]);
 			vVehicleOrigin[2] = vehicleDefaultOrigins[index];
-			entity_set_vector(vehicleIds[index], EV_VEC_origin, vVehicleOrigin);
+			entity_set_origin(vehicleIds[index], vVehicleOrigin);
 			server_print("func vehicle origin 2 %f", vVehicleOrigin[2]);
 
 			new Float:vehicle_height = vehicleDefaultHeights[index];
@@ -548,7 +548,7 @@ public damage_vehicle(vehicle_id, weaponClass[]) {
 		damageMultipler = floatadd(damageMultipler, 0.50);
 	}
 
-	// HMG1 +40% damage to + HELI + VTOL + PLANE + FIGHTERJET
+	// HMG1 +20% damage to + HELI + VTOL + PLANE + FIGHTERJET
 	if (equal(weaponClass, "afv_hmg1")) {
 		if (equal(vehicleTypes[vIndex], "HELI") || equal(vehicleTypes[vIndex], "VTOL") || equal(vehicleTypes[vIndex], "PLANE") || equal(vehicleTypes[vIndex], "FIGHTERJET")) {
 			damageMultipler = floatadd(damageMultipler, 0.20);
