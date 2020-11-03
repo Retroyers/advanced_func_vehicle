@@ -43,7 +43,7 @@ enum _:vehicleWeapon {
 	VWEAPON_GUIDED_MISSILE
 };
 new const vehicleWeaponNames[vehicleWeapon][] = {
-    "NO",
+	"NO",
 	"LMG1",
 	"HMG1",
 	"AUTO_CANNON",
@@ -1239,7 +1239,7 @@ public load_config() {
 
 				trim(vehicle_type);
 				trim(vehicle_wpn);
-				
+
 				new id_index;
 				while(id_index < 63) {
 					new targetname[32];
@@ -1247,16 +1247,13 @@ public load_config() {
 					if (strcmp(targetname,vehicle_name) == 0) {
 						copy(vehicleNames[id_index], 31, vehicle_name);
 						
-						//copy(vehicleTypes[id_index], 31, vehicle_type);
 						new vehicleType:vehicle_type_id;
 						if (TrieGetCell(vehicleTypesConfig, vehicle_type, vehicle_type_id)) {
-							server_print("Loaded type: %d" , vehicle_type_id);
 							vehicleTypes[id_index] = vehicle_type_id;
 						} else {
 							vehicleTypes[id_index] = VTYPE_VEHICLE;
 						}
 
-						//copy(vehicleWeaponTypes[id_index], 31, vehicle_wpn);
 						new vehicleWeapon:vehicle_weapon_type_id;
 						if (TrieGetCell(vehicleWeaponsConfig, vehicle_wpn, vehicle_weapon_type_id)) {
 							vehicleWeaponTypes[id_index] = vehicle_weapon_type_id;
