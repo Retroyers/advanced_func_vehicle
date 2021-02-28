@@ -24,6 +24,7 @@ new userControl[33];
 new vehiclesSpawned;
 new vehicleIds[64];
 new Float:vehicleLastShootTime[64];
+new bool:vehicleUsingNOS[64];
 
 //config
 enum _:vehicleWeapon {
@@ -186,7 +187,7 @@ public pfn_spawn(ent) {
 	entity_get_string(ent, EV_SZ_classname, sz_classname, charsmax(sz_classname));
 
 	if (equal(sz_classname, "func_vehicle")) {
-		server_print("spawned func vehicle %d %d", ent, vehiclesSpawned);
+		//server_print("spawned func vehicle %d %d", ent, vehiclesSpawned);
 		vehicleIds[vehiclesSpawned] = ent;
 		vehiclesSpawned++;
 	}
@@ -335,6 +336,12 @@ public forward_cmdstart(id, uc_handle) {
 		vWeapon = vehicleWeaponTypes[vIndex];
 		static vType;
 		vType = vehicleTypes[vIndex];
+		
+		if (vehicleUsingNOS[vIndex] && (Button & IN_BACK)) {
+			new args[1];
+			args[0] = vIndex;
+			set_task(0.1, "turnOffNOS", 0, args, 1);
+		}
 
 		// DRIFTING
 		if (vType == VTYPE_CAR_RWD && (OldButtons & IN_FORWARD)) {
@@ -417,7 +424,8 @@ public forward_cmdstart(id, uc_handle) {
 					}
 				}
 				case VWEAPON_NOS: {
-					if (checkDelay(id, vIndex, 8.0, false)) {
+					if (checkDelay(id, vIndex, 8.0, false) && !(Button & IN_BACK)) {
+						vehicleUsingNOS[vIndex] = true;
 						new Float:speed = vehicleDefaultSpeeds[vIndex];
 						speed = floatadd(speed, floatmul(floatdiv(vehicleDefaultSpeeds[vIndex],100.0), defaultNOSVelocity));
 						set_pdata_float(userVehicle[id], m_iSpeed, speed, 4);
@@ -437,7 +445,7 @@ public forward_cmdstart(id, uc_handle) {
 				}
 			}
 		}
-
+		
 		if ((Button & IN_ATTACK2) && (OldButtons & IN_ATTACK2) && checkVehicleAngle(id)) {
 
 			switch (vWeapon) {
@@ -473,7 +481,7 @@ public forward_cmdstart(id, uc_handle) {
 		}
 
 		// UP + DOWN
-		if (vType != VTYPE_HELI && vType != VTYPE_VTOL && vType != VTYPE_PLANE) {
+		if (vType != VTYPE_HELI && vType != VTYPE_VTOL) {
 			return FMRES_IGNORED;
 		}
 		if ((Button & IN_ATTACK) && (OldButtons & IN_ATTACK)) {
@@ -532,6 +540,7 @@ public forward_cmdstart(id, uc_handle) {
 public turnOffNOS(args[]) {
 	if  (is_valid_ent(vehicleIds[args[0]])) {
 		set_pdata_float(vehicleIds[args[0]], m_iSpeed, vehicleDefaultSpeeds[args[0]], 4);
+		vehicleUsingNOS[args[0]] = false;
 	}
 }
 
@@ -1257,7 +1266,7 @@ stock fireShot(id, vIndex, weaponClass[]) {
 	angle_vector(playerAngle, ANGLEVECTOR_FORWARD, vecDirShooting);
 
 	//FIRE
-	emit_sound(userVehicle[id], CHAN_WEAPON, shotSound, 0.6, ATTN_STATIC, 0, 255); // ATTN_NORM PITCH_NORM
+	emit_sound(userVehicle[id], CHAN_WEAPON, shotSound, 0.6, ATTN_NORM, 0, PITCH_NORM);
 
 	static tr, Float:vecEnd[3], pHit, Float:vecEndPos[3], Float:distance;
 	tr = create_tr2();
@@ -1384,19 +1393,9 @@ public load_config() {
 						vehicleWPN1_1[id_index] = str_to_num(vehicle_wpn1_y);
 						vehicleWPN1_2[id_index] = str_to_num(vehicle_wpn1_z);
 
-						server_print("Loaded: %s - %d - %d - %d - %d - %d - %d", vehicleNames[id_index], vehicleTypes[id_index], vehicleHPs[id_index], vehicleWeaponTypes[id_index], vehicleWPN1_0[id_index], vehicleWPN1_1[id_index], vehicleWPN1_2[id_index])
+						//server_print("Loaded: %s - %d - %d - %d - %d - %d - %d", vehicleNames[id_index], vehicleTypes[id_index], vehicleHPs[id_index], vehicleWeaponTypes[id_index], vehicleWPN1_0[id_index], vehicleWPN1_1[id_index], vehicleWPN1_2[id_index])
 
 						if  (is_valid_ent(vehicleIds[id_index])) {
-							//if (strcmp(vehicle_name,"chi") == 0) {
-							//	for (new i=0;i<250;i++) {
-							//		new vehicle_height2 = get_pdata_ent(vehicleIds[id_index], i );
-							//		server_print("v debug: %d %d", vehicle_height2 , i);
-							//	}
-							//}
-							//new Float:vehicleDmg;
-							//vehicleDmg = entity_get_float(vehicleIds[id_index], EV_FL_dmg);
-							//server_print("v debug damage: %f ", vehicleDmg);
-						
 							drop_to_floor(vehicleIds[id_index]); // quick fix for some BROKEN maps
 							new args[1];
 							args[0] = id_index;
@@ -1414,15 +1413,13 @@ public load_config() {
 public delayedDroppedToFloor(args[]) {
 	new id_index = args[0];
 
-	new Float:vehicle_height = get_pdata_float(vehicleIds[id_index], m_iHeight, 4);
-	vehicleDefaultHeights[id_index] = vehicle_height;
+	vehicleDefaultHeights[id_index] = get_pdata_float(vehicleIds[id_index], m_iHeight, 4);
 
 	new Float:vVehicleOrigin[3];
-	entity_get_vector(vehicleIds[id_index], EV_VEC_origin, vVehicleOrigin)
+	entity_get_vector(vehicleIds[id_index], EV_VEC_origin, vVehicleOrigin);
 	vehicleDefaultOrigins[id_index] = vVehicleOrigin[2];
 
-	new Float:vVehicleSpeed = get_pdata_float(vehicleIds[id_index], m_iSpeed, 4);
-	vehicleDefaultSpeeds[id_index] = vVehicleSpeed;
+	vehicleDefaultSpeeds[id_index] = get_pdata_float(vehicleIds[id_index], m_iSpeed, 4);
 
 	// colors for darkening
 	new Float:renderColor[3];
@@ -1432,8 +1429,7 @@ public delayedDroppedToFloor(args[]) {
 	vehicleDefaultRenderModes[id_index] = entity_get_int(vehicleIds[id_index], EV_INT_rendermode);
 	vehicleDefaultRenderAmts[id_index] = entity_get_float(vehicleIds[id_index], EV_FL_renderamt);
 
-	server_print("Map defaults  %s - height %f / origin %f / speed %f", 
-		vehicleNames[id_index], vehicleDefaultHeights[id_index], vehicleDefaultOrigins[id_index], vehicleDefaultSpeeds[id_index])
+	//server_print("Map defaults  %s - height %f / origin %f / speed %f", vehicleNames[id_index], vehicleDefaultHeights[id_index], vehicleDefaultOrigins[id_index], vehicleDefaultSpeeds[id_index])
 }
 
 get_configfile(file[], len) {
