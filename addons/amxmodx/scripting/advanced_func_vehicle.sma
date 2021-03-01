@@ -16,6 +16,13 @@ new Float:defaultVtolVelocity;
 new Float:defaultNOSVelocity;
 new Float:defaultdriftForce;
 
+new Float:defaultWeaponShellDelay;
+new Float:defaultWeaponConcCannonDelay;
+new Float:defaultWeaponGuidedMissileDelay;
+new Float:defaultWeaponCarHornDelay;
+new Float:defaultWeaponTruckHornDelay;
+new Float:defaultWeaponShipHornDelay;
+
 new explosion, explosion1, smoke, white, rocketsmoke;
 new bool:userAllowed[33];
 new userVehicle[33];
@@ -119,14 +126,17 @@ public plugin_init() {
 			register_think("func_vehicle", "vehicleThink");
 		}
 
+		defaultWeaponShellDelay = get_pcvar_float(register_cvar("afv_default_weapon_shell_delay", "10.0"));
+		defaultWeaponConcCannonDelay = get_pcvar_float(register_cvar("afv_default_weapon_conc_cannon_delay", "8.0"));
+		defaultWeaponGuidedMissileDelay = get_pcvar_float(register_cvar("afv_default_weapon_guided_missile_delay", "20.0"));
+		defaultWeaponCarHornDelay = get_pcvar_float(register_cvar("afv_default_weapon_car_horn_delay", "1.0"));
+		defaultWeaponTruckHornDelay = get_pcvar_float(register_cvar("afv_default_weapon_truck_horn_delay", "1.0"));
+		defaultWeaponShipHornDelay = get_pcvar_float(register_cvar("afv_default_weapon_ship_horn_delay", "1.0"));
+		
 		// defaults for sys_ticrate 100
-		new defaultVtolVelocityPointer = register_cvar("afv_default_vtol_velocity", "100.0");
-		new defaultNOSVelocityPointer = register_cvar("afv_default_nos_velocity", "40.0");
-		new defaultdriftForcePointer = register_cvar("afv_default_drift_force", "4.0");
-
-		defaultVtolVelocity = get_pcvar_float(defaultVtolVelocityPointer);
-		defaultNOSVelocity = get_pcvar_float(defaultNOSVelocityPointer);
-		defaultdriftForce = get_pcvar_float(defaultdriftForcePointer);
+		defaultVtolVelocity = get_pcvar_float(register_cvar("afv_default_vtol_velocity", "100.0"));
+		defaultNOSVelocity = get_pcvar_float(register_cvar("afv_default_nos_velocity", "40.0"));
+		defaultdriftForce = get_pcvar_float(register_cvar("afv_default_drift_force", "4.0"));
 
 		vehicleWeaponsConfig = TrieCreate();
 		vehicleTypesConfig = TrieCreate();
@@ -381,25 +391,25 @@ public forward_cmdstart(id, uc_handle) {
 		if ((Button & IN_ATTACK2) && !(OldButtons & IN_ATTACK2)) {
 			switch (vWeapon) {
 				case VWEAPON_SHELL_HEAT: {
-					if (checkVehicleAngle(id) && checkDelay(id, vIndex, 10.0, true)) {
+					if (checkVehicleAngle(id) && checkDelay(id, vIndex, defaultWeaponShellDelay, true)) {
 						fireShell(id, vIndex, "heat", 2500);
 						fired_weapon = true;
 					}
 				}
 				case VWEAPON_SHELL_AP: {
-					if (checkVehicleAngle(id) && checkDelay(id, vIndex, 10.0, true)) {
+					if (checkVehicleAngle(id) && checkDelay(id, vIndex, defaultWeaponShellDelay, true)) {
 						fireShell(id, vIndex, "ap", 2750);
 						fired_weapon = true;
 					}
 				}
 				case VWEAPON_SHELL_HE: {
-					if (checkVehicleAngle(id) && checkDelay(id, vIndex, 10.0, true)) {
+					if (checkVehicleAngle(id) && checkDelay(id, vIndex, defaultWeaponShellDelay, true)) {
 						fireShell(id, vIndex, "he", 2250);
 						fired_weapon = true;
 					}
 				}
 				case VWEAPON_CONC_CANNON: {
-					if (checkVehicleAngle(id) && checkDelay(id, vIndex, 8.0, true)) {
+					if (checkVehicleAngle(id) && checkDelay(id, vIndex, defaultWeaponConcCannonDelay, true)) {
 						client_print(id, print_chat, "[AFV] Firing concussion cannon");
 						fireConcCannon(id, vIndex);
 						fired_weapon = true;
@@ -407,19 +417,19 @@ public forward_cmdstart(id, uc_handle) {
 				}
 				case VWEAPON_HORN: {
 					if (checkDelay(id, vIndex, 3.0, false)) {
-						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/car_horn.wav", 1.0, ATTN_NORM, 0, PITCH_NORM);
+						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/car_horn.wav", defaultWeaponCarHornDelay, ATTN_NORM, 0, PITCH_NORM);
 						fired_weapon = true;
 					}
 				}
 				case VWEAPON_TRUCK_HORN: {
 					if (checkDelay(id, vIndex, 10.0, false)) {
-						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/truck_horn.wav", 1.0, ATTN_NORM, 0, PITCH_NORM);
+						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/truck_horn.wav", defaultWeaponTruckHornDelay, ATTN_NORM, 0, PITCH_NORM);
 						fired_weapon = true;
 					}
 				}
 				case VWEAPON_SHIP_HORN: {
 					if (checkDelay(id, vIndex, 15.0, false)) {
-						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/ship_horn.wav", 1.0, ATTN_NORM, 0, PITCH_NORM);
+						emit_sound(id, CHAN_ITEM, "advanced_func_vehicle/ship_horn.wav", defaultWeaponShipHornDelay, ATTN_NORM, 0, PITCH_NORM);
 						fired_weapon = true;
 					}
 				}
@@ -437,7 +447,7 @@ public forward_cmdstart(id, uc_handle) {
 					}
 				}
 				case VWEAPON_GUIDED_MISSILE: {
-					if (checkVehicleAngle(id) && checkDelay(id, vIndex, 20.0, true)) {
+					if (checkVehicleAngle(id) && checkDelay(id, vIndex, defaultWeaponGuidedMissileDelay, true)) {
 						client_print(id, print_chat, "[AFV] Firing guided missile");
 						fireGuidedMissile(id, vIndex);
 						fired_weapon = true;
