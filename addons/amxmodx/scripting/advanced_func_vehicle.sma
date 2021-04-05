@@ -950,8 +950,10 @@ public fireShell(id, vIndex, shellType[], shellVelocity) {
 	entity_set_vector(RocketEnt, EV_VEC_mins, MinBox);
 	entity_set_vector(RocketEnt, EV_VEC_maxs, MaxBox);
 
-	entity_set_int(RocketEnt, EV_INT_solid, 2);
-	entity_set_int(RocketEnt, EV_INT_movetype, 5);
+	set_rendering(RocketEnt, kRenderFxNone, 245, 212, 66, kRenderTransAdd, 255);
+	entity_set_int(RocketEnt, EV_INT_movetype, MOVETYPE_TOSS);
+	entity_set_float(RocketEnt, EV_FL_gravity, 0.4);
+	entity_set_int(RocketEnt, EV_INT_solid, SOLID_BBOX);
 	entity_set_edict(RocketEnt, EV_ENT_owner, id);
 
 	new Float:Velocity[3];
